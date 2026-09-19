@@ -1,5 +1,5 @@
 [package]
-name = "fetch"
+name = "rustfetch"
 version = "0.1.0"
 edition = "2024"
 
