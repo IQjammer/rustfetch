@@ -36,20 +36,14 @@ fn get_gpu(gpu: &str, gpu_list: &str) -> Option<String> {
 }
 
 fn get_ram(ram: &str) -> u64 {
-    for i in ram.lines() {
-        if let Some((_, quantity)) = i.split_once(":") {
-            let ram_clean = quantity
-                .trim()
-                .strip_suffix(" kB")
-                .unwrap_or(quantity.trim());
-            if let Ok(kb) = ram_clean.parse::<u64>() {
-                let gb = kb / 1024 / 1024;
-                return gb;
-            }
-        }
-    }
-
-    0
+    ram.lines()
+        .find_map(|line| {
+            let rest = line.strip_prefix("MemTotal:")?;
+            let kb = rest.split_whitespace().next()?;
+            let kb = kb.parse::<u64>().ok()?;
+            Some(kb / 1024 / 1024)
+        })
+        .unwrap_or(0)
 }
 
 fn get_os(os_raw: &str) -> Option<&str> {
