@@ -1,17 +1,16 @@
 use std::fs;
 
-fn get_user(raw_file: &str) -> &str {
-    for i in raw_file.lines() {
-        if i.starts_with('_') {
-            continue;
-        }
-        if i.contains(":1000:") {
-            if let Some((user, _)) = i.split_once(':') {
-                return user;
-            }
-        }
-    }
-    "unknown"
+fn get_user(raw_file: &str) -> Option<&str> {
+    raw_file.lines().find_map(|line| {
+        let mut parts = line.split(':');
+
+        let user = parts.next()?;
+        let uid = parts.nth(1)?;
+
+        let uid = uid.parse::<u32>().ok()?;
+
+        if uid == 1000 { Some(user) } else { None }
+    })
 }
 
 fn get_cpu(raw_file: &str) -> &str {
@@ -84,7 +83,7 @@ fn main() {
     let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family")
         .unwrap_or("unknown".to_string());
 
-    println!("User: {}", get_user(&user));
+    println!("User: {}", get_user(&user).unwrap_or("unknown"));
     println!("Host: {}", host.trim());
     println!("Os: {}", get_os(&os).unwrap_or("unknown"));
     println!("cpu: {}", get_cpu(&cpu));
