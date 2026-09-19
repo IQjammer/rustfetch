@@ -13,16 +13,12 @@ fn get_user(raw_file: &str) -> Option<&str> {
     })
 }
 
-fn get_cpu(raw_file: &str) -> &str {
-    for i in raw_file.lines() {
-        if !i.starts_with("model name") {
-            continue;
-        }
-        if let Some((_, model)) = i.split_once(':') {
-            return model.trim();
-        }
-    }
-    "unknown"
+fn get_cpu(raw_file: &str) -> Option<&str> {
+    raw_file.lines().find_map(|line| {
+        let rest = line.strip_prefix("model name")?;
+        let (_, model) = rest.split_once(':')?;
+        Some(model.trim())
+    })
 }
 
 fn get_gpu(gpu: &str, gpu_list: &str) -> Option<String> {
@@ -70,23 +66,21 @@ fn get_os(os_raw: &str) -> Option<&str> {
 }
 
 fn main() {
-    let user = fs::read_to_string("/etc/passwd").unwrap_or("unknown".to_string());
-    let cpu = fs::read_to_string("/proc/cpuinfo").unwrap_or("unknown".to_string());
+    let user = fs::read_to_string("/etc/passwd").unwrap_or_default();
+    let cpu = fs::read_to_string("/proc/cpuinfo").unwrap_or_default();
 
-    let gpu =
-        fs::read_to_string("/sys/class/drm/card0/device/device").unwrap_or("unknown".to_string());
-    let gpu_list = fs::read_to_string("/usr/share/hwdata/pci.ids").unwrap_or("unknown".to_string());
+    let gpu = fs::read_to_string("/sys/class/drm/card0/device/device").unwrap_or_default();
+    let gpu_list = fs::read_to_string("/usr/share/hwdata/pci.ids").unwrap_or_default();
 
-    let ram = fs::read_to_string("/proc/meminfo").unwrap_or("unknown".to_string());
-    let os = fs::read_to_string("/etc/os-release").unwrap_or("unknown".to_string());
+    let ram = fs::read_to_string("/proc/meminfo").unwrap_or_default();
+    let os = fs::read_to_string("/etc/os-release").unwrap_or_default();
 
-    let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family")
-        .unwrap_or("unknown".to_string());
+    let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family").unwrap_or_default();
 
     println!("User: {}", get_user(&user).unwrap_or("unknown"));
     println!("Host: {}", host.trim());
-    println!("Os: {}", get_os(&os).unwrap_or("unknown"));
-    println!("cpu: {}", get_cpu(&cpu));
+    println!("OS: {}", get_os(&os).unwrap_or("unknown"));
+    println!("CPU: {}", get_cpu(&cpu).unwrap_or_default());
     println!("GPU: {}", get_gpu(&gpu, &gpu_list).unwrap_or_default());
     println!("RAM: {} Gb", get_ram(&ram));
 }
