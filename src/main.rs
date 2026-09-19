@@ -71,16 +71,18 @@ fn get_os(os_raw: &str) -> Option<&str> {
 }
 
 fn main() {
-    let user = fs::read_to_string("/etc/passwd").expect("Not Found");
-    let cpu = fs::read_to_string("/proc/cpuinfo").expect("Not Found");
+    let user = fs::read_to_string("/etc/passwd").unwrap_or("unknown".to_string());
+    let cpu = fs::read_to_string("/proc/cpuinfo").unwrap_or("unknown".to_string());
 
-    let gpu = fs::read_to_string("/sys/class/drm/card0/device/device").expect("Not Found");
-    let gpu_list = fs::read_to_string("/usr/share/hwdata/pci.ids").expect("Not Found");
+    let gpu =
+        fs::read_to_string("/sys/class/drm/card0/device/device").unwrap_or("unknown".to_string());
+    let gpu_list = fs::read_to_string("/usr/share/hwdata/pci.ids").unwrap_or("unknown".to_string());
 
-    let ram = fs::read_to_string("/proc/meminfo").expect("Not Found");
-    let os = fs::read_to_string("/etc/os-release").expect("Not Found");
+    let ram = fs::read_to_string("/proc/meminfo").unwrap_or("unknown".to_string());
+    let os = fs::read_to_string("/etc/os-release").unwrap_or("unknown".to_string());
 
-    let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family").expect("Not Found");
+    let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family")
+        .unwrap_or("unknown".to_string());
 
     println!("User: {}", get_user(&user));
     println!("Host: {}", host.trim());
