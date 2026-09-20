@@ -21,18 +21,19 @@ fn get_cpu(raw_file: &str) -> Option<&str> {
     })
 }
 
-fn get_gpu(gpu: &str, gpu_list: &str) -> Option<String> {
-    let gpu_clean = gpu.strip_prefix("0x").unwrap_or(gpu).trim();
-    for i in gpu_list.trim().lines() {
-        if !i.starts_with('\t') || !i.contains(gpu_clean) {
-            continue;
-        }
+//TODO model parsing
+fn get_gpu<'a>(gpu: &str, gpu_list: &'a str) -> Option<&'a str> {
+    let gpu_clean = gpu.trim().strip_prefix("0x").unwrap_or(gpu.trim());
 
-        if let Some((_, model)) = i.split_once("[") {
-            return Some(model.trim_end_matches(']').to_string());
+    gpu_list.lines().find_map(|line| {
+        let line = line.strip_prefix('\t')?;
+        if !line.starts_with(gpu_clean) {
+            return None;
         }
-    }
-    None
+        let (_, model) = line.split_once('[')?;
+        let (name, _) = model.split_once(']')?;
+        Some(name.trim())
+    })
 }
 
 fn get_ram(ram: &str) -> u64 {
