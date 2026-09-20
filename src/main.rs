@@ -47,16 +47,10 @@ fn get_ram(ram: &str) -> u64 {
 }
 
 fn get_os(os_raw: &str) -> Option<&str> {
-    for i in os_raw.lines() {
-        if !i.starts_with("PRETTY_NAME=") {
-            continue;
-        }
-
-        if let Some((_, dist)) = i.split_once('"') {
-            return Some(dist.trim_end_matches('"'));
-        }
-    }
-    None
+    os_raw.lines().find_map(|line| {
+        let val = line.strip_prefix("PRETTY_NAME=")?;
+        Some(val.trim_matches('"'))
+    })
 }
 
 fn main() {
