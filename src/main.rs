@@ -1,75 +1,14 @@
-use std::fs;
-
-fn get_user(raw_file: &str) -> Option<&str> {
-    raw_file.lines().find_map(|line| {
-        let mut parts = line.split(':');
-
-        let user = parts.next()?;
-        let uid = parts.nth(1)?;
-
-        let uid = uid.parse::<u32>().ok()?;
-
-        if uid == 1000 { Some(user) } else { None }
-    })
-}
-
-fn get_cpu(raw_file: &str) -> Option<&str> {
-    raw_file.lines().find_map(|line| {
-        let rest = line.strip_prefix("model name")?;
-        let (_, model) = rest.split_once(':')?;
-        Some(model.trim())
-    })
-}
-
-//TODO model parsing
-fn get_gpu<'a>(gpu: &str, gpu_list: &'a str) -> Option<&'a str> {
-    let gpu_clean = gpu.trim().strip_prefix("0x").unwrap_or(gpu.trim());
-
-    gpu_list.lines().find_map(|line| {
-        let line = line.strip_prefix('\t')?;
-        if !line.starts_with(gpu_clean) {
-            return None;
-        }
-        let (_, model) = line.split_once('[')?;
-        let (name, _) = model.split_once(']')?;
-        Some(name.trim())
-    })
-}
-
-fn get_ram(ram: &str) -> u64 {
-    ram.lines()
-        .find_map(|line| {
-            let rest = line.strip_prefix("MemTotal:")?;
-            let kb = rest.split_whitespace().next()?;
-            let kb = kb.parse::<u64>().ok()?;
-            Some(kb / 1024 / 1024)
-        })
-        .unwrap_or(0)
-}
-
-fn get_os(os_raw: &str) -> Option<&str> {
-    os_raw.lines().find_map(|line| {
-        let val = line.strip_prefix("PRETTY_NAME=")?;
-        Some(val.trim_matches('"'))
-    })
-}
+mod sysinfo;
 
 fn main() {
-    let user = fs::read_to_string("/etc/passwd").unwrap_or_default();
-    let cpu = fs::read_to_string("/proc/cpuinfo").unwrap_or_default();
-
-    let gpu = fs::read_to_string("/sys/class/drm/card0/device/device").unwrap_or_default();
-    let gpu_list = fs::read_to_string("/usr/share/hwdata/pci.ids").unwrap_or_default();
-
-    let ram = fs::read_to_string("/proc/meminfo").unwrap_or_default();
-    let os = fs::read_to_string("/etc/os-release").unwrap_or_default();
-
-    let host = fs::read_to_string("/sys/devices/virtual/dmi/id/product_family").unwrap_or_default();
-
-    println!("User: {}", get_user(&user).unwrap_or("unknown"));
-    println!("Host: {}", host.trim());
-    println!("OS: {}", get_os(&os).unwrap_or("unknown"));
-    println!("CPU: {}", get_cpu(&cpu).unwrap_or_default());
-    println!("GPU: {}", get_gpu(&gpu, &gpu_list).unwrap_or_default());
-    println!("RAM: {} Gb", get_ram(&ram));
+    let out = format!(
+        "User: {}\nHost: {}\nOS: {}\nCPU: {}\nGPU: {}\nRAM: {:.1} GiB\n",
+        sysinfo::user(),
+        sysinfo::host(),
+        sysinfo::os(),
+        sysinfo::cpu_g().unwrap(),
+        sysinfo::get_gpu_name().unwrap(),
+        sysinfo::ram_gib().unwrap(),
+    );
+    print!("{out}");
 }
