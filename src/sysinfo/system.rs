@@ -50,3 +50,15 @@ fn parse_os(raw: &str) -> Option<&str> {
         Some(val.trim_matches('"'))
     })
 }
+
+pub fn kernel() -> String {
+    let Ok(content) = fs::read_to_string("/proc/version") else {
+        return String::from("None");
+    };
+
+    let clean = content
+        .split_once(" (")
+        .map_or(content.as_str(), |(v, _)| v);
+
+    clean.replace(" version", "").trim().to_string()
+}
