@@ -2,7 +2,7 @@ mod sysinfo;
 
 fn main() {
     let out = format!(
-        "User: {}\nHost: {}\nOS: {}\nKernel: {}\nCPU: {}\nGPU: {}\nRAM: {:.1} GiB\n",
+        "User: {}\nHost: {}\nOS: {}\nKernel: {}\nCPU: {}\nGPU: {}\nRAM: {:.1} GiB\nUptime: {}\n",
         sysinfo::user(),
         sysinfo::host(),
         sysinfo::os(),
@@ -10,6 +10,7 @@ fn main() {
         sysinfo::cpu_g().unwrap(),
         sysinfo::get_gpu_name().unwrap(),
         sysinfo::ram_gib().unwrap(),
+        sysinfo::uptime().unwrap(),
     );
     print!("{out}");
 }

@@ -62,3 +62,28 @@ pub fn kernel() -> String {
 
     clean.replace(" version", "").trim().to_string()
 }
+
+pub fn uptime() -> Option<String> {
+    let content = fs::read_to_string("/proc/uptime").ok()?;
+
+    let (secs_str, _) = content.split_once('.')?;
+
+    let total_secs = secs_str.parse::<u32>().ok()?;
+
+    let days = total_secs / 86400;
+    let hours = (total_secs % 86400) / 3600;
+    let minutes = (total_secs % 3600) / 60;
+    let seconds = total_secs % 60;
+
+    let res = if days > 0 {
+        format!("{days} days, {hours} hours, {minutes} minutes")
+    } else if hours > 0 {
+        format!("{hours} hours, {minutes} minutes")
+    } else if minutes > 0 {
+        format!("{minutes} minutes, {seconds} seconds")
+    } else {
+        format!("{seconds} seconds")
+    };
+
+    Some(res)
+}
