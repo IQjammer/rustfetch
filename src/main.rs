@@ -7,10 +7,10 @@ fn main() {
         sysinfo::host(),
         sysinfo::os(),
         sysinfo::kernel(),
-        sysinfo::cpu_g().unwrap(),
-        sysinfo::get_gpu_name().unwrap(),
-        sysinfo::ram_gib().unwrap(),
-        sysinfo::uptime().unwrap(),
+        sysinfo::cpu_g().unwrap_or_default(),
+        sysinfo::get_gpu_name().unwrap_or_default(),
+        sysinfo::ram_gib().unwrap_or_default(),
+        sysinfo::uptime().unwrap_or_default(),
     );
     print!("{out}");
 }
