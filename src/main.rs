@@ -3,7 +3,7 @@ mod sysinfo;
 fn main() {
     let out = format!(
         "User: {}\nHost: {}\nOS: {}\nKernel: {}\nCPU: {}\nGPU: {}\nRAM: {:.1} GiB\nUptime: {}\n",
-        sysinfo::user(),
+        sysinfo::user().unwrap_or_default(),
         sysinfo::host(),
         sysinfo::os(),
         sysinfo::kernel(),

@@ -18,19 +18,17 @@ pub fn ram_gib() -> Option<f64> {
     Some(kb as f64 / 1024.0 / 1024.0)
 }
 
-pub fn user() -> String {
-    let raw = fs::read_to_string("/etc/passwd").unwrap_or_default();
+pub fn user() -> Option<String> {
+    let raw = fs::read_to_string("/etc/passwd").ok()?;
 
-    raw.lines()
-        .find_map(|line| {
-            let mut parts = line.split(':');
+    raw.lines().find_map(|line| {
+        let mut parts = line.split(':');
 
-            let name = parts.next()?;
-            let uid = parts.nth(1)?.parse::<u32>().ok()?;
+        let name = parts.next()?;
+        let uid = parts.nth(1)?.parse::<u32>().ok()?;
 
-            (uid == 1000).then(|| name.to_string())
-        })
-        .unwrap_or_else(|| "unknown".into())
+        (uid == 1000).then(|| name.to_string())
+    })
 }
 
 pub fn host() -> String {
