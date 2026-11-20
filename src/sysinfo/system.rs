@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -19,6 +20,12 @@ pub fn ram_gib() -> Option<f64> {
 }
 
 pub fn user() -> Option<String> {
+    if let Ok(u) = env::var("USER").or_else(|_| env::var("LOGNAME"))
+        && !u.is_empty()
+    {
+        return Some(u);
+    }
+
     let raw = fs::read_to_string("/etc/passwd").ok()?;
 
     raw.lines().find_map(|line| {
