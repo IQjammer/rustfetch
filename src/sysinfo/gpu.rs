@@ -1,6 +1,6 @@
+use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::fs;
 
 fn lookup(vendor: &str, device: &str) -> Option<String> {
     let file = File::open("/usr/share/hwdata/pci.ids").ok()?;
@@ -22,11 +22,14 @@ fn lookup(vendor: &str, device: &str) -> Option<String> {
             }
             continue;
         }
-        let Some(rest) = line.strip_prefix('\t') else {
-            return None; // блок вендора закончился, устройства нет
+        let rest = line.strip_prefix('\t')?;
+
+        let Some(rest) = rest.strip_prefix(device) else {
+            continue;
         };
-        let Some(rest) = rest.strip_prefix(device) else { continue };
-        let Some(name) = rest.strip_prefix("  ") else { continue };
+        let Some(name) = rest.strip_prefix("  ") else {
+            continue;
+        };
         let name = name.trim_end();
 
         return Some(
@@ -72,5 +75,9 @@ pub fn get_gpu_name() -> Option<String> {
         })
         .collect();
 
-    if names.is_empty() { None } else { Some(names.join(", ")) }
+    if names.is_empty() {
+        None
+    } else {
+        Some(names.join(", "))
+    }
 }
