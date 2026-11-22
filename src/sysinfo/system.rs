@@ -3,20 +3,35 @@ use std::fs;
 use std::fs::File;
 use std::io::Read;
 
-pub fn ram_gib() -> Option<f64> {
-    let mut buf = [0u8; 128];
+pub fn mem() -> Option<(f32, f32)> {
+    let mut buf = [0u8; 450];
     let n = File::open("/proc/meminfo").ok()?.read(&mut buf).ok()?;
     let text = std::str::from_utf8(&buf[..n]).ok()?;
+    let mut mem_total = None;
+    let mut swap_total = None;
 
-    let kb: u64 = text
-        .lines()
-        .find_map(|l| l.strip_prefix("MemTotal:"))?
-        .split_whitespace()
-        .next()?
-        .parse()
-        .ok()?;
+    for line in text.lines() {
+        if let Some(rest) = line.strip_prefix("MemTotal:") {
+            mem_total = rest
+                .split_whitespace()
+                .next()
+                .and_then(|m| m.parse::<u64>().ok());
+        } else if let Some(rest) = line.strip_prefix("SwapTotal:") {
+            swap_total = rest
+                .split_whitespace()
+                .next()
+                .and_then(|s| s.parse::<u64>().ok());
+        }
 
-    Some(kb as f64 / 1024.0 / 1024.0)
+        if mem_total.is_some() && swap_total.is_some() {
+            break;
+        }
+    }
+
+    let (mem_total, swap_total) = (mem_total?, swap_total?);
+    let to_gib = |kb: u64| kb as f32 / 1024.0 / 1024.0;
+
+    Some((to_gib(mem_total), to_gib(swap_total)))
 }
 
 pub fn user() -> Option<String> {
